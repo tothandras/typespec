@@ -61,8 +61,13 @@ model QueryOptions {
   explode?: boolean;
 
   /**
+   * Determines the delimiteration of query parameters.
+   */
+  style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
+
+  /**
    * Determines the format of the array if type array is used.
-   * **DEPRECATED**: use explode: true instead of `multi` or `@encode`
+   * **DEPRECATED**: use style and explode parameters instead.
    */
   format?: "multi" | "csv" | "ssv" | "tsv" | "simple" | "form" | "pipes";
 }

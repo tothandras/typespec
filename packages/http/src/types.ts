@@ -299,7 +299,9 @@ export interface HeaderFieldOptions {
   format?: "csv" | "multi" | "ssv" | "tsv" | "pipes" | "simple" | "form";
 }
 
-export interface QueryParameterOptions extends Required<Omit<QueryOptions, "format">> {
+export interface QueryParameterOptions
+  extends Required<Omit<QueryOptions, "format" | "style">>,
+    Pick<QueryOptions, "style"> {
   type: "query";
   /**
    * @deprecated use explode and `@encode` decorator instead.

@@ -1462,6 +1462,11 @@ function createOAPIEmitter(
       attributes.explode = false;
     }
 
+    if (parameter.style) {
+      attributes.style = parameter.style;
+      return attributes;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     switch (parameter.format) {
       case "ssv":
