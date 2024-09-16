@@ -180,7 +180,7 @@ export const $query: QueryDecorator = (
   if (userOptions.format) {
     reportDeprecated(
       context.program,
-      "The `format` option of `@query` decorator is deprecated. Use `explode: true` instead of `form` and `multi`. `csv` or `simple` is the default now.",
+      "The `format` option of `@query` decorator is deprecated. Use `style` and `explode` instead.",
       entity,
     );
   }
@@ -189,6 +189,7 @@ export const $query: QueryDecorator = (
     explode:
       userOptions.explode ?? (userOptions.format === "multi" || userOptions.format === "form"),
     format: userOptions.format,
+    style: userOptions.style,
     name: paramName,
   };
 

@@ -14,6 +14,7 @@ export interface CookieOptions {
 export interface QueryOptions {
   readonly name?: string;
   readonly explode?: boolean;
+  readonly style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
   readonly format?: "multi" | "csv" | "ssv" | "tsv" | "simple" | "form" | "pipes";
 }
 

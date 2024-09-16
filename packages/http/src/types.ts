@@ -304,7 +304,9 @@ export interface CookieParameterOptions extends Required<CookieOptions> {
   name: string;
 }
 
-export interface QueryParameterOptions extends Required<Omit<QueryOptions, "format">> {
+export interface QueryParameterOptions
+  extends Required<Omit<QueryOptions, "format" | "style">>,
+    Pick<QueryOptions, "style"> {
   type: "query";
   /**
    * @deprecated use explode and `@encode` decorator instead.
