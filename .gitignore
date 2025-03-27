@@ -227,3 +227,5 @@ packages/http-client-python/micropip.lock
 
 # http-server-js emitter
 packages/http-server-js/test/e2e/generated
+
+.pnpm-store

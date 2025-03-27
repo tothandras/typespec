@@ -708,10 +708,9 @@ function createOAPIEmitter(
   }
 
   function computeSharedOperationId(shared: SharedHttpOperation) {
-    const operationIds = shared.operations.map((op) => resolveOperationId(program, op.operation));
-    const uniqueOpIds = new Set<string>(operationIds);
-    if (uniqueOpIds.size === 1) return uniqueOpIds.values().next().value;
-    return operationIds.join("_");
+    return [
+      ...new Set(shared.operations.map((op) => resolveOperationId(program, op.operation))),
+    ].join("_");
   }
 
   function getOperationOrSharedOperation(operation: HttpOperation | SharedHttpOperation):
@@ -1545,6 +1544,9 @@ function createOAPIEmitter(
     const style = getParameterStyle(httpProperty.property);
     if (style) {
       attributes.style = style;
+    }
+    if (httpProperty.options.style) {
+      attributes.style = httpProperty.options.style;
     }
 
     return attributes;
