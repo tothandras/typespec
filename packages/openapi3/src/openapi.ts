@@ -1292,6 +1292,19 @@ function createOAPIEmitter(
       Object.assign(param, attributes);
     }
 
+    const encode = getEncode(program, httpProperty.property);
+    if (param.in === "query" && encode?.encoding) {
+      param.schema!.type = undefined;
+      param.explode = undefined;
+      param.style = undefined;
+      param.content = {
+        [encode.encoding]: {
+          schema: param.schema!,
+        },
+      };
+      param.schema = undefined;
+    }
+
     if (isDeprecated(program, httpProperty.property)) {
       param.deprecated = true;
     }
@@ -1459,7 +1472,7 @@ function createOAPIEmitter(
   ): OpenAPI3Parameter {
     if (target.schema) {
       const schema = target.schema;
-      if (schema.enum && apply.schema.enum) {
+      if (schema.enum && apply.schema?.enum) {
         schema.enum = [...new Set([...schema.enum, ...apply.schema.enum])];
       }
       target.schema = schema;
