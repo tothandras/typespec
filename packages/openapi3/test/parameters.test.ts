@@ -43,8 +43,38 @@ worksFor(["3.0.0", "3.1.0"], ({ diagnoseOpenApiFor, openApiFor }) => {
         explode: false,
         style: style,
       });
-      expect(param.schema).toStrictEqual({
+      expect(param.schema).toMatchObject({
         type: "array",
+        items: { type: "string" },
+      });
+    });
+
+    it("creates content field for query param with @encode('application/json')", async () => {
+      const param = await getQueryParam(
+        `op test(@query @encode("application/json") filter: {name: string, age: int32}): void;`,
+      );
+      expect(param.schema).toBeUndefined();
+      expect(param.explode).toBeUndefined();
+      expect(param.style).toBeUndefined();
+      expect(param.content).toBeDefined();
+      expect(param.content!["application/json"]).toBeDefined();
+      expect(param.content!["application/json"].schema).toMatchObject({
+        properties: {
+          name: { type: "string" },
+          age: { type: "integer", format: "int32" },
+        },
+        required: ["name", "age"],
+      });
+    });
+
+    it("creates content field for query param with @encode('application/json') for simple types", async () => {
+      const param = await getQueryParam(
+        `op test(@query @encode("application/json") items: string[]): void;`,
+      );
+      expect(param.schema).toBeUndefined();
+      expect(param.content).toBeDefined();
+      expect(param.content!["application/json"]).toBeDefined();
+      expect(param.content!["application/json"].schema).toMatchObject({
         items: { type: "string" },
       });
     });
@@ -99,6 +129,7 @@ worksFor(["3.0.0", "3.1.0"], ({ diagnoseOpenApiFor, openApiFor }) => {
         schema: {
           type: "string",
         },
+        style: "form",
       });
     });
 

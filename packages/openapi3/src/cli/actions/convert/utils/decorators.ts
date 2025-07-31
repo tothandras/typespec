@@ -44,7 +44,7 @@ export function getParameterDecorators(parameter: OpenAPI3Parameter) {
   const decorators: TypeSpecDecorator[] = [];
 
   decorators.push(...getExtensions(parameter));
-  decorators.push(...getDecoratorsForSchema(parameter.schema));
+  decorators.push(...getDecoratorsForSchema(parameter.schema!));
 
   const locationDecorator = getLocationDecorator(parameter);
   if (locationDecorator) decorators.push(locationDecorator);

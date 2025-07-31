@@ -118,7 +118,7 @@ function transformOperationParameter(
     doc: parameter.description,
     decorators: getParameterDecorators(parameter),
     isOptional: !parameter.required,
-    schema: parameter.schema,
+    schema: parameter.schema!,
   };
 }
 

@@ -107,6 +107,10 @@ function serializeObjectValueAsJson(
           ? resolveEncodedName(program, definition, "application/json")
           : propValue.name;
       obj[name] = serializeValueAsJson(program, propValue.value, definition);
+    } else if (type.kind === "Union") {
+      // If the type is still a union (meaning resolveUnions failed to resolve it to a specific variant),
+      // we should still serialize all the properties from the value
+      obj[propValue.name] = serializeValueAsJson(program, propValue.value, program.checker.anyType);
     }
   }
   return obj;

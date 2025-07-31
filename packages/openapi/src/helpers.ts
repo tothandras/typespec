@@ -35,11 +35,12 @@ export function shouldInline(program: Program, type: Type): boolean {
   if (getFriendlyName(program, type)) {
     return false;
   }
+
   switch (type.kind) {
     case "Model":
       return !type.name || isTemplateInstance(type);
-    case "Scalar":
-      return program.checker.isStdType(type) || isTemplateInstance(type);
+    // case "Scalar":
+    // return program.checker.isStdType(type) || isTemplateInstance(type);
     case "Enum":
     case "Union":
       return !type.name;

@@ -299,6 +299,7 @@ class Parameter(_ParameterBase):
         self.explode: bool = self.yaml_data.get("explode", False)
         self.in_overridden: bool = self.yaml_data.get("inOverridden", False)
         self.delimiter: Optional[ParameterDelimeter] = self.yaml_data.get("delimiter")
+        self.content_type: Optional[str] = self.yaml_data.get("contentType")
         self._default_to_unset_sentinel: bool = False
 
     @property

@@ -10,6 +10,7 @@ import {
   getAllTags,
   getAnyExtensionFromPath,
   getDoc,
+  getEncode,
   getFormat,
   getMaxItems,
   getMaxLength,
@@ -773,6 +774,9 @@ function createOAPIEmitter(
     const uniqueOpIds = new Set<string>(operationIds);
     if (uniqueOpIds.size === 1) return uniqueOpIds.values().next().value;
     return operationIds.join("_");
+    // return [
+    //   ...new Set(shared.operations.map((op) => resolveOperationId(program, op.operation))),
+    // ].join("_");
   }
 
   function getOperationOrSharedOperation(operation: HttpOperation | SharedHttpOperation):
@@ -1347,6 +1351,11 @@ function createOAPIEmitter(
     return false;
   }
 
+  function isParameterStyleEncoding(encoding: string | undefined): boolean {
+    if (!encoding) return false;
+    return ["ArrayEncoding.pipeDelimited", "ArrayEncoding.spaceDelimited"].includes(encoding);
+  }
+
   function getParameter(
     httpProperty: HttpParameterProperties,
     visibility: Visibility,
@@ -1365,6 +1374,19 @@ function createOAPIEmitter(
       };
     } else {
       Object.assign(param, attributes);
+    }
+
+    const encode = getEncode(program, httpProperty.property);
+    if (param.in === "query" && encode?.encoding && !isParameterStyleEncoding(encode.encoding)) {
+      param.schema!.type = undefined;
+      param.explode = undefined;
+      param.style = undefined;
+      param.content = {
+        [encode.encoding]: {
+          schema: param.schema!,
+        },
+      };
+      param.schema = undefined;
     }
 
     if (isDeprecated(program, httpProperty.property)) {
@@ -1543,7 +1565,7 @@ function createOAPIEmitter(
   ): OpenAPI3Parameter {
     if (target.schema) {
       const schema = target.schema;
-      if (schema.enum && apply.schema.enum) {
+      if (schema.enum && apply.schema?.enum) {
         schema.enum = [...new Set([...schema.enum, ...apply.schema.enum])];
       }
       target.schema = schema;
@@ -1626,8 +1648,11 @@ function createOAPIEmitter(
       attributes.explode = false;
     }
     const style = getParameterStyle(program, httpProperty.property);
+    // Prioritize @encode-based style over explicit options.style
     if (style) {
       attributes.style = style;
+    } else if (httpProperty.options.style) {
+      attributes.style = httpProperty.options.style;
     }
 
     return attributes;

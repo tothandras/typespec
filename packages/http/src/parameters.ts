@@ -102,6 +102,7 @@ function getOperationParametersForVerb(
             type: "query",
             name: uriParam.name,
             explode,
+            style: "form",
           };
         } else if (uriParam.operator === "+") {
           return {

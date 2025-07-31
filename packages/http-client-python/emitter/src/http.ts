@@ -1,4 +1,4 @@
-import { NoTarget } from "@typespec/compiler";
+import { getEncode, NoTarget } from "@typespec/compiler";
 
 import {
   getHttpOperationParameter,
@@ -422,6 +422,17 @@ function emitHttpQueryParameter(
 ): Record<string, any> {
   const base = emitParamBase(context, parameter, method);
   const [delimiter, explode] = getDelimiterAndExplode(parameter);
+
+  // Check for @encode decorator with media type encoding (e.g., "application/json")
+  let contentType: string | undefined;
+  if (parameter.__raw && parameter.__raw.kind === "ModelProperty") {
+    const encode = getEncode(context.program, parameter.__raw);
+
+    if (encode?.encoding && !isParameterStyleEncoding(encode.encoding)) {
+      contentType = encode.encoding;
+    }
+  }
+
   return {
     ...base,
     wireName: parameter.serializedName,
@@ -430,7 +441,13 @@ function emitHttpQueryParameter(
     delimiter,
     explode,
     clientDefaultValue: parameter.clientDefaultValue,
+    contentType,
   };
+}
+
+function isParameterStyleEncoding(encoding: string | undefined): boolean {
+  if (!encoding) return false;
+  return ["ArrayEncoding.pipeDelimited", "ArrayEncoding.spaceDelimited"].includes(encoding);
 }
 
 function emitHttpParameters(
