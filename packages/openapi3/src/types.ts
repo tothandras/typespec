@@ -633,7 +633,7 @@ export type OpenAPI3ParameterBase = Extensions & {
   examples?: Record<string, Refable<OpenAPI3Example>>;
 };
 
-export type OpenAPI3QueryParameter = OpenAPI3ParameterBase & {
+export type OpenAPI3QueryParameter = Omit<OpenAPI3ParameterBase, "schema"> & {
   /** Name of the parameter. */
   name: string;
   in: "query";
@@ -644,6 +644,14 @@ export type OpenAPI3QueryParameter = OpenAPI3ParameterBase & {
    * @see https://github.com/OAI/OpenAPI-Specification/blob/3.0.3/versions/3.0.2.md#style-values
    */
   style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
+
+  content?: {
+    [mediaType: string]: {
+      schema: OpenAPI3Schema;
+    };
+  };
+
+  schema?: OpenAPI3Schema;
 };
 export type OpenAPI3PathParameter = OpenAPI3ParameterBase & {
   /** Name of the parameter. */

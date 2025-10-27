@@ -537,6 +537,88 @@ worksFor(["3.0.0", "3.1.0"], ({ diagnoseOpenApiFor, oapiForModel, openApiFor }) 
       strictEqual(variant.description, undefined);
     }
   });
+
+  it("defaults on discriminated unions with envelope none", async () => {
+    const res = await openApiFor(
+      `
+      model A {
+        type: "a",
+        a?: numeric
+      }
+
+      model B {
+        type: "b",
+        b?: numeric
+      }
+
+      @discriminated(#{ envelope: "none", discriminatorPropertyName: "type" })
+      union C {
+        a: A,
+        b: B,
+      }
+
+      model D {
+        c?: C = #{
+          type: "a"
+        }
+      }
+      `,
+    );
+
+    deepStrictEqual(res.components.schemas.D, {
+      type: "object",
+      properties: {
+        c: {
+          allOf: [{ $ref: "#/components/schemas/C" }],
+          default: {
+            type: "a",
+          },
+        },
+      },
+    });
+  });
+
+  it("defaults on discriminated unions with more complex default", async () => {
+    const res = await openApiFor(
+      `
+      model A {
+        type: "a",
+        a?: numeric
+      }
+
+      model B {
+        type: "b",
+        b?: numeric
+      }
+
+      @discriminated(#{ envelope: "none", discriminatorPropertyName: "type" })
+      union C {
+        a: A,
+        b: B,
+      }
+
+      model D {
+        c?: C = #{
+          type: "a",
+          a: 42
+        }
+      }
+      `,
+    );
+
+    deepStrictEqual(res.components.schemas.D, {
+      type: "object",
+      properties: {
+        c: {
+          allOf: [{ $ref: "#/components/schemas/C" }],
+          default: {
+            type: "a",
+            a: 42,
+          },
+        },
+      },
+    });
+  });
 });
 
 worksFor(["3.0.0"], ({ diagnoseOpenApiFor, oapiForModel, openApiFor }) => {
