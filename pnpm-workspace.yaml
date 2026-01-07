@@ -4,7 +4,8 @@ packages:
   - website
   - "!packages/http-client-csharp/**"
   - "!packages/http-client-java/**"
-  - "!packages/http-client-python/**"
+  - "packages/http-client-python/**"
+  - "!packages/http-client-python/venv/**"
 
 catalog:
   "@alloy-js/cli": ^0.22.0

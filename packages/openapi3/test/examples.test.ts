@@ -524,7 +524,7 @@ worksFor(supportedVersions, ({ openApiFor }) => {
           `,
         { "experimental-parameter-examples": "serialized" },
       );
-      expect((res.paths[`/`].get?.parameters[0] as OpenAPI3Parameter).example).toEqual(
+      expect((res.paths[`/`].get?.parameters?.[0] as OpenAPI3Parameter).example).toEqual(
         expectedExample,
       );
     });
@@ -671,7 +671,7 @@ worksFor(supportedVersions, ({ openApiFor }) => {
           `,
         { "experimental-parameter-examples": "serialized" },
       );
-      expect((res.paths[`/{color}`].get?.parameters[0] as OpenAPI3Parameter).example).toEqual(
+      expect((res.paths[`/{color}`].get?.parameters?.[0] as OpenAPI3Parameter).example).toEqual(
         expectedExample,
       );
     });
@@ -728,7 +728,7 @@ worksFor(supportedVersions, ({ openApiFor }) => {
           `,
         { "experimental-parameter-examples": "serialized" },
       );
-      expect((res.paths[`/`].get?.parameters[0] as OpenAPI3Parameter).example).toEqual(
+      expect((res.paths[`/`].get?.parameters?.[0] as OpenAPI3Parameter).example).toEqual(
         expectedExample,
       );
     });
@@ -773,7 +773,7 @@ worksFor(supportedVersions, ({ openApiFor }) => {
           `,
         { "experimental-parameter-examples": "serialized" },
       );
-      expect((res.paths[`/`].get?.parameters[0] as OpenAPI3Parameter).example).toEqual(
+      expect((res.paths[`/`].get?.parameters?.[0] as OpenAPI3Parameter).example).toEqual(
         expectedExample,
       );
     });

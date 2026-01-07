@@ -10,6 +10,7 @@ import {
   getAllTags,
   getAnyExtensionFromPath,
   getDoc,
+  getEncode,
   getFormat,
   getMaxItems,
   getMaxLength,
@@ -793,7 +794,7 @@ function createOAPIEmitter(
       .map((op) => func(program, op.operation))
       .filter((op) => op !== undefined) as string[];
     if (values.length) {
-      return values.join(joinChar);
+      return values.join(joinChar).trim();
     } else {
       return undefined;
     }
@@ -805,6 +806,9 @@ function createOAPIEmitter(
     const uniqueOpIds = new Set<string>(operationIds);
     if (uniqueOpIds.size === 1) return uniqueOpIds.values().next().value;
     return operationIds.join("_");
+    // return [
+    //   ...new Set(shared.operations.map((op) => resolveOperationId(program, op.operation))),
+    // ].join("_");
   }
 
   function getOperationOrSharedOperation(operation: HttpOperation | SharedHttpOperation):
@@ -834,7 +838,7 @@ function createOAPIEmitter(
     });
     const oai3Operation: OpenAPI3Operation = {
       operationId: computeSharedOperationId(shared),
-      parameters: [],
+      parameters: undefined,
       description: joinOps(operations, getDoc, " "),
       summary: joinOps(operations, getSummary, " "),
       responses: getSharedResponses(shared, examples),
@@ -879,11 +883,14 @@ function createOAPIEmitter(
       );
     }
     const visibility = visibilities[0];
-    oai3Operation.parameters = getEndpointParameters(
+    const endpointParameters = getEndpointParameters(
       resolveSharedRouteParameters(operations),
       visibility,
       examples,
     );
+    if (endpointParameters.length > 0) {
+      oai3Operation.parameters = endpointParameters;
+    }
 
     const bodies = [
       ...new Set(operations.map((op) => op.parameters.body).filter((x) => x !== undefined)),
@@ -912,11 +919,12 @@ function createOAPIEmitter(
     const examples = resolveOperationExamples(program, operation, {
       parameterExamplesStrategy: options.parameterExamplesStrategy,
     });
+    const endpointParameters = getEndpointParameters(parameters.properties, visibility, examples);
     const oai3Operation: OpenAPI3Operation = {
       operationId: operationIdResolver.resolve(operation.operation),
       summary: getSummary(program, operation.operation),
       description: getDoc(program, operation.operation),
-      parameters: getEndpointParameters(parameters.properties, visibility, examples),
+      parameters: endpointParameters.length > 0 ? endpointParameters : undefined,
       responses: getResponses(operation, operation.responses, examples),
     };
     const currentTags = getAllTags(program, op);
@@ -1434,6 +1442,11 @@ function createOAPIEmitter(
     return false;
   }
 
+  function isParameterStyleEncoding(encoding: string | undefined): boolean {
+    if (!encoding) return false;
+    return ["ArrayEncoding.pipeDelimited", "ArrayEncoding.spaceDelimited"].includes(encoding);
+  }
+
   function getParameter(
     httpProperty: HttpParameterProperties,
     visibility: Visibility,
@@ -1452,6 +1465,19 @@ function createOAPIEmitter(
       };
     } else {
       Object.assign(param, attributes);
+    }
+
+    const encode = getEncode(program, httpProperty.property);
+    if (param.in === "query" && encode?.encoding && !isParameterStyleEncoding(encode.encoding)) {
+      param.schema!.type = undefined;
+      param.explode = undefined;
+      param.style = undefined;
+      param.content = {
+        [encode.encoding]: {
+          schema: param.schema!,
+        },
+      };
+      param.schema = undefined;
     }
 
     if (isDeprecated(program, httpProperty.property)) {
@@ -1725,8 +1751,11 @@ function createOAPIEmitter(
       attributes.explode = false;
     }
     const style = getParameterStyle(program, httpProperty.property);
+    // Prioritize @encode-based style over explicit options.style
     if (style) {
       attributes.style = style;
+    } else if (httpProperty.options.style) {
+      attributes.style = httpProperty.options.style;
     }
 
     return attributes;
@@ -1836,6 +1865,9 @@ function createOAPIEmitter(
     const extensions = getExtensions(program, type);
     if (extensions) {
       for (const key of extensions.keys()) {
+        if (key === "x-inline") {
+          continue;
+        }
         emitObject[key] = extensions.get(key);
       }
     }
@@ -1923,8 +1955,8 @@ function createOAPIEmitter(
 
   function getOpenAPISecuritySchemes(
     httpAuthentications: HttpAuth[],
-  ): Record<string, OpenAPI3SecurityScheme> {
-    const schemes: Record<string, OpenAPI3SecurityScheme> = {};
+  ): Record<string, OpenAPI3SecurityScheme | { $ref: string }> {
+    const schemes: Record<string, OpenAPI3SecurityScheme | { $ref: string }> = {};
     for (const httpAuth of httpAuthentications) {
       const scheme = getOpenAPI3Scheme(httpAuth);
       if (scheme) {
@@ -1967,7 +1999,13 @@ function createOAPIEmitter(
     return undefined;
   }
 
-  function getOpenAPI3Scheme(auth: HttpAuth): OpenAPI3SecurityScheme | undefined {
+  function getOpenAPI3Scheme(auth: HttpAuth): OpenAPI3SecurityScheme | { $ref: string } | undefined {
+    // Check if the auth model has a @useRef decorator
+    const refUrl = getRef(program, auth.model);
+    if (refUrl) {
+      return { $ref: refUrl };
+    }
+
     const scheme = getOpenAPI3SchemeInternal(auth);
 
     if (scheme) {

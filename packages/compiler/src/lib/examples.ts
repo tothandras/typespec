@@ -174,6 +174,10 @@ function serializeObjectValueAsJson(
         handlers,
         propValue.node,
       );
+    } else if (type.kind === "Union") {
+      // If the type is still a union (meaning resolveUnions failed to resolve it to a specific variant),
+      // we should still serialize all the properties from the value
+      obj[propValue.name] = serializeValueAsJson(program, propValue.value, program.checker.anyType);
     }
   }
   return obj;

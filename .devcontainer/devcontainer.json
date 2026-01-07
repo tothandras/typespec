@@ -5,14 +5,14 @@
   },
   "customizations": {
     // Configure properties specific to VS Code.
-    "vscode": {
+    // "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "streetsidesoftware.code-spell-checker",
-        "vitest.explorer"
-      ]
-    }
+      // "extensions": [
+        // "dbaeumer.vscode-eslint",
+        // "esbenp.prettier-vscode",
+        // "streetsidesoftware.code-spell-checker",
+        // "vitest.explorer"
+      // ]
+    // }
   }
 }

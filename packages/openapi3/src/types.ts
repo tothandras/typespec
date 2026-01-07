@@ -657,7 +657,7 @@ export type OpenAPI3ParameterBase = Extensions & {
   content?: Record<string, OpenAPI3MediaType>;
 };
 
-export type OpenAPI3QueryParameter = OpenAPI3ParameterBase & {
+export type OpenAPI3QueryParameter = Omit<OpenAPI3ParameterBase, "schema"> & {
   /** Name of the parameter. */
   name: string;
   in: "query";
@@ -668,6 +668,14 @@ export type OpenAPI3QueryParameter = OpenAPI3ParameterBase & {
    * @see https://spec.openapis.org/oas/v3.0.4.html#style-values
    */
   style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
+
+  content?: {
+    [mediaType: string]: {
+      schema: OpenAPI3Schema;
+    };
+  };
+
+  schema?: OpenAPI3Schema;
 };
 export type OpenAPI3PathParameter = OpenAPI3ParameterBase & {
   /** Name of the parameter. */
@@ -736,7 +744,7 @@ export type OpenAPI3Operation = Extensions & {
   tags?: string[];
   operationId?: string;
   requestBody?: Refable<OpenAPI3RequestBody>;
-  parameters: Refable<OpenAPI3Parameter>[];
+  parameters?: Refable<OpenAPI3Parameter>[];
   deprecated?: boolean;
   security?: Record<string, string[]>[];
 };
