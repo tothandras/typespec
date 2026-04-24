@@ -1,5 +1,5 @@
-﻿global::System.ClientModel.ClientResult result = this.GetScalar(cancellationToken.CanBeCanceled ? new global::System.ClientModel.Primitives.RequestOptions { CancellationToken = cancellationToken } : null);
+﻿global::System.ClientModel.ClientResult result = this.GetScalar(cancellationToken.ToRequestOptions());
 global::System.BinaryData data = result.GetRawResponse().Content;
 using global::System.Text.Json.JsonDocument document = global::System.Text.Json.JsonDocument.Parse(data);
 global::System.Text.Json.JsonElement element = document.RootElement;
-return global::System.ClientModel.ClientResult.FromValue(new global::System.Uri(element.GetString()), result.GetRawResponse());
+return global::System.ClientModel.ClientResult.FromValue(new global::System.Uri(element.GetString(), global::System.UriKind.RelativeOrAbsolute), result.GetRawResponse());

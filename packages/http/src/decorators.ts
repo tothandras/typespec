@@ -155,6 +155,7 @@ export const $query: QueryDecorator = (
 
   setQueryOptions(context.program, entity, {
     explode: userOptions.explode,
+    style: userOptions.style,
     name: paramName,
   });
 };
@@ -168,6 +169,7 @@ export function resolveQueryOptionsWithDefaults(
   return {
     explode: options.explode ?? false,
     name: options.name,
+    style: options.style ?? "form",
   };
 }
 

@@ -18,8 +18,10 @@ namespace Microsoft.TypeSpec.Generator.ClientModel.Providers
 
         public abstract Type UriBuilderType { get; }
         public abstract MethodBodyStatement SetHeaders(IReadOnlyList<ValueExpression> arguments);
+        public abstract MethodBodyStatement AddCollectionHeaders(ValueExpression prefix, ValueExpression headers);
 
         public abstract ValueExpression Content();
+        public abstract ValueExpression ClientRequestId();
         public abstract HttpRequestApi FromExpression(ValueExpression original);
         public abstract HttpRequestApi ToExpression();
     }

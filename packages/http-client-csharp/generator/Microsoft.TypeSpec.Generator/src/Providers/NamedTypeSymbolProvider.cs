@@ -103,7 +103,7 @@ namespace Microsoft.TypeSpec.Generator.Providers
             };
         }
 
-        protected override FieldProvider[] BuildFields()
+        protected internal override FieldProvider[] BuildFields()
         {
             List<FieldProvider> fields = new List<FieldProvider>();
             foreach (var fieldSymbol in _namedTypeSymbol.GetMembers().OfType<IFieldSymbol>())
@@ -122,7 +122,8 @@ namespace Microsoft.TypeSpec.Generator.Providers
                         fieldSymbol.Name,
                         this,
                         GetSymbolXmlDoc(fieldSymbol, "summary"),
-                        initializationValue: GetFieldInitializer(fieldSymbol))
+                        initializationValue: GetFieldInitializer(fieldSymbol),
+                        attributes: fieldSymbol.GetAttributes().Select(a => new AttributeStatement(a)).ToArray())
                     {
                         OriginalName = GetOriginalName(fieldSymbol)
                     };
@@ -133,7 +134,7 @@ namespace Microsoft.TypeSpec.Generator.Providers
             return [.. fields];
         }
 
-        protected override PropertyProvider[] BuildProperties()
+        protected internal override PropertyProvider[] BuildProperties()
         {
             List<PropertyProvider> properties = new List<PropertyProvider>();
             foreach (var propertySymbol in _namedTypeSymbol.GetMembers().OfType<IPropertySymbol>())
@@ -146,7 +147,8 @@ namespace Microsoft.TypeSpec.Generator.Providers
                     new AutoPropertyBody(
                         propertySymbol.SetMethod is not null,
                         InitializationExpression: GetPropertyInitializer(propertySymbol)),
-                    this)
+                    this,
+                    attributes: propertySymbol.GetAttributes().Select(a => new AttributeStatement(a)).ToArray())
                 {
                     OriginalName = GetOriginalName(propertySymbol),
                     CustomProvider = new(() => propertySymbol.Type is INamedTypeSymbol propertyNamedTypeSymbol
@@ -220,7 +222,7 @@ namespace Microsoft.TypeSpec.Generator.Providers
             return originalName;
         }
 
-        protected override ConstructorProvider[] BuildConstructors()
+        protected internal override ConstructorProvider[] BuildConstructors()
         {
             List<ConstructorProvider> constructors = new List<ConstructorProvider>();
             foreach (var constructorSymbol in _namedTypeSymbol.Constructors)
@@ -240,7 +242,7 @@ namespace Microsoft.TypeSpec.Generator.Providers
             return [.. constructors];
         }
 
-        protected override MethodProvider[] BuildMethods()
+        protected internal override MethodProvider[] BuildMethods()
         {
             List<MethodProvider> methods = new List<MethodProvider>();
             foreach (var methodSymbol in _namedTypeSymbol.GetMembers().OfType<IMethodSymbol>())
@@ -262,8 +264,21 @@ namespace Microsoft.TypeSpec.Generator.Providers
 
                 AddAdditionalModifiers(methodSymbol, ref modifiers);
                 var explicitInterface = methodSymbol.ExplicitInterfaceImplementations.FirstOrDefault();
+
+                // For conversion operators, use the target type name as the method name to match generated code
+                string methodName;
+                if (methodSymbol.MethodKind == MethodKind.Conversion)
+                {
+                    // Use the return type name for conversion operators (explicit/implicit)
+                    methodName = methodSymbol.ReturnType.Name;
+                }
+                else
+                {
+                    methodName = methodSymbol.ToDisplayString(format);
+                }
+
                 var signature = new MethodSignature(
-                    methodSymbol.ToDisplayString(format),
+                    methodName,
                     GetSymbolXmlDoc(methodSymbol, "summary"),
                     // remove private modifier for explicit interface implementations
                     explicitInterface != null ? modifiers & ~MethodSignatureModifiers.Private : modifiers,
@@ -310,6 +325,25 @@ namespace Microsoft.TypeSpec.Generator.Providers
             if (methodSymbol.IsStatic)
             {
                 modifiers |= MethodSignatureModifiers.Static;
+            }
+            // Handle conversion operators (explicit and implicit)
+            if (methodSymbol.MethodKind == MethodKind.Conversion)
+            {
+                modifiers |= MethodSignatureModifiers.Operator;
+                // Check if it's explicit or implicit
+                if (methodSymbol.Name == "op_Explicit")
+                {
+                    modifiers |= MethodSignatureModifiers.Explicit;
+                }
+                else if (methodSymbol.Name == "op_Implicit")
+                {
+                    modifiers |= MethodSignatureModifiers.Implicit;
+                }
+            }
+            // Handle user-defined operators
+            else if (methodSymbol.MethodKind == MethodKind.UserDefinedOperator)
+            {
+                modifiers |= MethodSignatureModifiers.Operator;
             }
         }
 

@@ -1,15 +1,16 @@
 import { createTypeSpecLibrary, JSONSchemaType, paramMessage } from "@typespec/compiler";
 
 export type FileType = "yaml" | "json";
-export type OpenAPIVersion = "3.0.0" | "3.1.0";
+export type OpenAPIVersion = "3.0.0" | "3.1.0" | "3.2.0";
 export type ExperimentalParameterExamplesStrategy = "data" | "serialized";
 export interface OpenAPI3EmitterOptions {
   /**
-   * If the content should be serialized as YAML or JSON.
+   * If the content should be serialized as YAML or JSON. Can be a single value or an array to emit multiple file types.
+   * When an array is provided, the `{file-type}` variable can be used in `output-file` to produce distinct filenames.
    * @default yaml, it not specified infer from the `output-file` extension
    */
 
-  "file-type"?: FileType;
+  "file-type"?: FileType | FileType[];
 
   /**
    * Name of the output file.
@@ -18,7 +19,7 @@ export interface OpenAPI3EmitterOptions {
    *  - service-name-if-multiple: Name of the service if multiple
    *  - version: Version of the service if multiple
    *
-   * @default `{service-name-if-multiple}.{version}.openapi.yaml` or `.json` if {@link OpenAPI3EmitterOptions["file-type"]} is `"json"`
+   * @default `{service-name-if-multiple}.{version}.openapi.yaml` or `.json` if {@link OpenAPI3EmitterOptions["file-type"]} is `"json"`. When `file-type` is an array, uses `{file-type}` variable.
    *
    * @example Single service no versioning
    *  - `openapi.yaml`
@@ -44,8 +45,7 @@ export interface OpenAPI3EmitterOptions {
    * If more than one version is specified, then the output file
    * will be created inside a directory matching each specification version.
    *
-   * @default ["v3.0"]
-   * @internal
+   * @default ["3.0.0"]
    */
   "openapi-versions"?: OpenAPIVersion[];
 
@@ -130,11 +130,25 @@ const EmitterOptionsSchema: JSONSchemaType<OpenAPI3EmitterOptions> = {
   additionalProperties: false,
   properties: {
     "file-type": {
-      type: "string",
-      enum: ["yaml", "json"],
+      type: ["string", "array"],
       nullable: true,
+      oneOf: [
+        {
+          type: "string",
+          enum: ["yaml", "json"],
+        },
+        {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["yaml", "json"],
+          },
+          uniqueItems: true,
+          minItems: 1,
+        },
+      ],
       description:
-        "If the content should be serialized as YAML or JSON. Default 'yaml', it not specified infer from the `output-file` extension",
+        "If the content should be serialized as YAML or JSON. Can be a single value or an array to emit multiple formats. Default 'yaml', if not specified infer from the `output-file` extension",
     },
     "output-file": {
       type: "string",
@@ -145,8 +159,10 @@ const EmitterOptionsSchema: JSONSchemaType<OpenAPI3EmitterOptions> = {
         "  - service-name: Name of the service",
         "  - service-name-if-multiple: Name of the service if multiple",
         "  - version: Version of the service if multiple",
+        "  - file-type: The file type being emitted (json or yaml). Useful when `file-type` is an array.",
         "",
         ' Default: `{service-name-if-multiple}.{version}.openapi.yaml` or `.json` if `file-type` is `"json"`',
+        " When `file-type` is an array: `{service-name-if-multiple}.{version}.openapi.{file-type}`",
         "",
         " Example Single service no versioning",
         "  - `openapi.yaml`",
@@ -167,16 +183,18 @@ const EmitterOptionsSchema: JSONSchemaType<OpenAPI3EmitterOptions> = {
       ].join("\n"),
     },
     "openapi-versions": {
+      title: "OpenAPI Versions",
       type: "array",
       items: {
         type: "string",
-        enum: ["3.0.0", "3.1.0"],
+        enum: ["3.0.0", "3.1.0", "3.2.0"],
         nullable: true,
         description: "The versions of OpenAPI to emit. Defaults to `[3.0.0]`",
       },
       nullable: true,
       uniqueItems: true,
       minItems: 1,
+      default: ["3.0.0"],
     },
     "new-line": {
       type: "string",
@@ -395,6 +413,19 @@ export const $lib = createTypeSpecLibrary({
       severity: "warning",
       messages: {
         default: paramMessage`Invalid key '${"value"}' used in a fixed field of the Component object. Only alphanumerics, dot (.), hyphen (-), and underscore (_) characters are allowed in keys.`,
+      },
+    },
+    "streams-not-supported": {
+      severity: "warning",
+      messages: {
+        default:
+          "Streams with itemSchema are only fully supported in OpenAPI 3.2.0 or above. The response will be emitted without itemSchema. Consider using OpenAPI 3.2.0 for full stream support.",
+      },
+    },
+    "default-not-supported": {
+      severity: "warning",
+      messages: {
+        default: paramMessage`Default value is not supported in OpenAPI 3.0 ${"message"}`,
       },
     },
   },

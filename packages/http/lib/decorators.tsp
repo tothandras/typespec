@@ -97,6 +97,11 @@ model QueryOptions {
    *
    */
   explode?: boolean;
+
+  /**
+   * Determines the delimiteration of query parameters.
+   */
+  style?: "form" | "spaceDelimited" | "pipeDelimited" | "deepObject";
 }
 
 /**

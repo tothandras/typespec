@@ -5,9 +5,11 @@ import { test as baseTest, inject } from "vitest";
 
 const __dirname = import.meta.dirname;
 export const projectRoot = path.resolve(__dirname, "../../../");
+export const repoRoot = path.resolve(projectRoot, "../../");
 export const tempDir = path.resolve(projectRoot, "./temp");
 export const testfilesDir = path.resolve(projectRoot, "./test/scenarios");
 export const imagesPath = path.resolve(tempDir, "./images-linux");
+export const npxCmd = process.platform === "win32" ? "npx.cmd" : "npx";
 
 interface Context {
   page: Page;
@@ -33,9 +35,8 @@ export const test = baseTest.extend<{
     await use(async (options) => {
       const executablePath = inject("executablePath");
       const workspacePath = options.workspacePath;
-      let envOverrides = {};
       const codePath = path.join(executablePath, "../bin");
-      envOverrides = {
+      const envOverrides = {
         PATH: `${codePath}${path.delimiter}${process.env.PATH}`,
       };
 
@@ -58,7 +59,18 @@ export const test = baseTest.extend<{
           `--folder-uri=file:${path.resolve(workspacePath)}`,
         ].filter((v): v is string => !!v),
       });
+
+      // Ensure Electron is always closed on teardown, even if later steps fail.
+      teardowns.push(async () => {
+        try {
+          await app.close();
+        } catch (error) {}
+      });
+
       const page = await app.firstWindow();
+      // Wait for the page to fully load to reduce the chance of
+      // VS Code reloading the window and destroying the execution context.
+      await page.waitForLoadState("domcontentloaded");
       const tracePath = join(projectRoot, "test-results", task.name, "trace.zip");
       const artifactsDir = join(tempDir, "playwright-artifacts");
       await fs.promises.mkdir(artifactsDir, { recursive: true }); // make sure the directory exists

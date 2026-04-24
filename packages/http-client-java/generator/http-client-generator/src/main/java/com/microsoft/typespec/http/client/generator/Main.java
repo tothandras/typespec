@@ -3,10 +3,6 @@
 
 package com.microsoft.typespec.http.client.generator;
 
-import com.azure.core.util.Configuration;
-import com.azure.core.util.CoreUtils;
-import com.azure.json.JsonProviders;
-import com.azure.json.JsonReader;
 import com.microsoft.typespec.http.client.generator.core.extension.model.codemodel.AnnotatedPropertyUtils;
 import com.microsoft.typespec.http.client.generator.core.extension.model.codemodel.CodeModel;
 import com.microsoft.typespec.http.client.generator.core.extension.model.codemodel.CodeModelCustomConstructor;
@@ -23,6 +19,9 @@ import com.microsoft.typespec.http.client.generator.mgmt.model.javamodel.FluentJ
 import com.microsoft.typespec.http.client.generator.mgmt.util.FluentUtils;
 import com.microsoft.typespec.http.client.generator.model.EmitterOptions;
 import com.microsoft.typespec.http.client.generator.util.FileUtil;
+import io.clientcore.core.serialization.json.JsonReader;
+import io.clientcore.core.utils.CoreUtils;
+import io.clientcore.core.utils.configuration.Configuration;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -201,7 +200,7 @@ public class Main {
      */
     private static void deleteGeneratedJavaFiles(String outputDir, List<JavaFile> javaFiles, JavaSettings settings,
         String suffix) {
-        Set<String> filesToDelete = new HashSet<>();
+        Set<String> filesToDelete = new LinkedHashSet<>();
 
         // clean up source code, based on metadata
         String metadataFilename = "src/main/resources/META-INF/"
@@ -210,7 +209,7 @@ public class Main {
         Path metadataFilePath = Paths.get(outputDir, metadataFilename).toAbsolutePath();
         if (Files.isRegularFile(metadataFilePath) && metadataFilePath.toFile().canRead()) {
             try (BufferedReader reader = Files.newBufferedReader(metadataFilePath, StandardCharsets.UTF_8);
-                JsonReader jsonReader = JsonProviders.createReader(reader)) {
+                JsonReader jsonReader = JsonReader.fromReader(reader)) {
                 TypeSpecMetadata metadata = TypeSpecMetadata.fromJson(jsonReader);
                 if (metadata != null && !CoreUtils.isNullOrEmpty(metadata.getGeneratedFiles())) {
                     filesToDelete.addAll(metadata.getGeneratedFiles()
@@ -252,7 +251,7 @@ public class Main {
         String emitterOptionsJson = Configuration.getGlobalConfiguration().get("emitterOptions");
 
         if (emitterOptionsJson != null) {
-            try (JsonReader jsonReader = JsonProviders.createReader(emitterOptionsJson)) {
+            try (JsonReader jsonReader = JsonReader.fromString(emitterOptionsJson)) {
                 options = EmitterOptions.fromJson(jsonReader);
                 // namespace
                 if (CoreUtils.isNullOrEmpty(options.getNamespace())) {

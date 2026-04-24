@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """The preprocessing autorest plugin."""
+
 import copy
 from typing import Callable, Any, Optional
 
@@ -21,7 +22,6 @@ from ..utils import (
     get_body_type_for_description,
     JSON_REGEXP,
     KNOWN_TYPES,
-    update_enum_value,
 )
 
 
@@ -236,7 +236,7 @@ class PreProcessPlugin(YamlUpdatePlugin):
                     body_parameter["type"]["types"].insert(1, any_obj_list_or_dict)
             code_model["types"].append(body_parameter["type"])
 
-    def pad_reserved_words(self, name: str, pad_type: PadType):
+    def pad_reserved_words(self, name: str, pad_type: PadType, yaml_type: dict[str, Any]) -> str:
         # we want to pad hidden variables as well
         if not name:
             # we'll pass in empty operation groups sometime etc.
@@ -250,6 +250,10 @@ class PreProcessPlugin(YamlUpdatePlugin):
         name_prefix = "_" if name[0] == "_" else ""
         name = name[1:] if name[0] == "_" else name
         if name.lower() in reserved_words[pad_type]:
+            if self.is_tsp and name.lower() in TSP_RESERVED_WORDS.get(pad_type, []):
+                # to maintain backcompat for cases where we pad in tsp but not in autorest,
+                # if we have a tsp reserved word, we also want to keep track of the original name for backcompat
+                yaml_type["originalTspName"] = name_prefix + name
             return name_prefix + name + pad_type
         return name_prefix + name
 
@@ -257,34 +261,24 @@ class PreProcessPlugin(YamlUpdatePlugin):
         for type in yaml_data:
             for property in type.get("properties", []):
                 property["description"] = update_description(property.get("description", ""))
-                property["clientName"] = self.pad_reserved_words(property["clientName"].lower(), PadType.PROPERTY)
+                property["clientName"] = self.pad_reserved_words(
+                    property["clientName"].lower(), PadType.PROPERTY, property
+                )
                 add_redefined_builtin_info(property["clientName"], property)
             if type.get("name"):
                 pad_type = PadType.MODEL if type["type"] == "model" else PadType.ENUM_CLASS
-                name = self.pad_reserved_words(type["name"], pad_type)
-                type["name"] = name[0].upper() + name[1:]
+                if type["type"] != "enumvalue":
+                    name = self.pad_reserved_words(type["name"], pad_type, type)
+                    type["name"] = name[0].upper() + name[1:]
                 type["description"] = update_description(type.get("description", ""), type["name"])
                 type["snakeCaseName"] = to_snake_case(type["name"])
             if type.get("values"):
-                # we're enums
-                values_to_add = []
+                # we're enums - enum values are UPPER_CASE so no padding needed for reserved words
                 for value in type["values"]:
-                    padded_name = self.pad_reserved_words(value["name"].lower(), PadType.ENUM_VALUE).upper()
-                    if self.version_tolerant:
-                        if padded_name[0] in "0123456789":
-                            padded_name = "ENUM_" + padded_name
-                            value["name"] = padded_name
-                    else:
-                        if value["name"] != padded_name:
-                            values_to_add.append(
-                                update_enum_value(
-                                    name=padded_name,
-                                    value=value["value"],
-                                    description=value["description"],
-                                    enum_type=value["enumType"],
-                                )
-                            )
-                type["values"].extend(values_to_add)
+                    upper_name = value["name"].upper()
+                    if upper_name[0] in "0123456789":
+                        upper_name = "ENUM_" + upper_name
+                        value["name"] = upper_name
 
         # add type for reference
         for v in HEADERS_CONVERT_IN_METHOD.values():
@@ -364,13 +358,13 @@ class PreProcessPlugin(YamlUpdatePlugin):
     def update_parameter(self, yaml_data: dict[str, Any]) -> None:
         yaml_data["description"] = update_description(yaml_data.get("description", ""))
         if not (yaml_data["location"] == "header" and yaml_data["clientName"] in ("content_type", "accept")):
-            yaml_data["clientName"] = self.pad_reserved_words(yaml_data["clientName"].lower(), PadType.PARAMETER)
+            yaml_data["clientName"] = self.pad_reserved_words(
+                yaml_data["clientName"].lower(), PadType.PARAMETER, yaml_data
+            )
         if yaml_data.get("propertyToParameterName"):
-            # need to create a new one with padded keys and values
+            # need to create a new one with padded values (but NOT keys, since keys are wire names)
             yaml_data["propertyToParameterName"] = {
-                self.pad_reserved_words(prop, PadType.PROPERTY): self.pad_reserved_words(
-                    param_name, PadType.PARAMETER
-                ).lower()
+                prop: self.pad_reserved_words(param_name, PadType.PARAMETER, yaml_data).lower()
                 for prop, param_name in yaml_data["propertyToParameterName"].items()
             }
         wire_name_lower = (yaml_data.get("wireName") or "").lower()
@@ -390,15 +384,17 @@ class PreProcessPlugin(YamlUpdatePlugin):
         *,
         is_overload: bool = False,
     ) -> None:
-        yaml_data["groupName"] = self.pad_reserved_words(yaml_data["groupName"], PadType.OPERATION_GROUP)
+        yaml_data["groupName"] = self.pad_reserved_words(yaml_data["groupName"], PadType.OPERATION_GROUP, yaml_data)
         yaml_data["groupName"] = to_snake_case(yaml_data["groupName"])
         yaml_data["name"] = yaml_data["name"].lower()
         if yaml_data.get("isLroInitialOperation") is True:
             yaml_data["name"] = (
-                "_" + self.pad_reserved_words(extract_original_name(yaml_data["name"]), PadType.METHOD) + "_initial"
+                "_"
+                + self.pad_reserved_words(extract_original_name(yaml_data["name"]), PadType.METHOD, yaml_data)
+                + "_initial"
             )
         else:
-            yaml_data["name"] = self.pad_reserved_words(yaml_data["name"], PadType.METHOD)
+            yaml_data["name"] = self.pad_reserved_words(yaml_data["name"], PadType.METHOD, yaml_data)
         yaml_data["description"] = update_description(yaml_data["description"], yaml_data["name"])
         yaml_data["summary"] = update_description(yaml_data.get("summary", ""))
         body_parameter = yaml_data.get("bodyParameter")
@@ -485,7 +481,7 @@ class PreProcessPlugin(YamlUpdatePlugin):
         item_type = item_type or yaml_data["itemType"]["elementType"]
         if yaml_data.get("nextOperation"):
             yaml_data["nextOperation"]["groupName"] = self.pad_reserved_words(
-                yaml_data["nextOperation"]["groupName"], PadType.OPERATION_GROUP
+                yaml_data["nextOperation"]["groupName"], PadType.OPERATION_GROUP, yaml_data["nextOperation"]
             )
             yaml_data["nextOperation"]["groupName"] = to_snake_case(yaml_data["nextOperation"]["groupName"])
             for response in yaml_data["nextOperation"].get("responses", []):
@@ -503,10 +499,11 @@ class PreProcessPlugin(YamlUpdatePlugin):
             operation_group["identifyName"] = self.pad_reserved_words(
                 operation_group.get("name", operation_group["propertyName"]),
                 PadType.OPERATION_GROUP,
+                operation_group,
             )
             operation_group["identifyName"] = to_snake_case(operation_group["identifyName"])
             operation_group["propertyName"] = self.pad_reserved_words(
-                operation_group["propertyName"], PadType.OPERATION_GROUP
+                operation_group["propertyName"], PadType.OPERATION_GROUP, operation_group
             )
             operation_group["propertyName"] = to_snake_case(operation_group["propertyName"])
             operation_group["className"] = update_operation_group_class_name(

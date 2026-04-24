@@ -45,9 +45,9 @@ namespace Microsoft.TypeSpec.Generator.Providers
             IEnumerable<SuppressionStatement>? suppressions = default)
         {
             Signature = signature;
-            var paramHash = MethodProviderHelpers.GetParamHash(signature);
+            var paramHash = MethodProviderHelpers.GetParamHash(signature, enclosingType);
             BodyStatements = MethodProviderHelpers.GetBodyStatementWithValidation(signature.Parameters, bodyStatements, paramHash);
-            XmlDocs = xmlDocProvider ?? MethodProviderHelpers.BuildXmlDocs(signature);
+            XmlDocs = xmlDocProvider ?? MethodProviderHelpers.BuildXmlDocs(signature, enclosingType);
             EnclosingType = enclosingType;
             Suppressions = (suppressions as IReadOnlyList<SuppressionStatement>) ?? [];
         }
@@ -68,9 +68,27 @@ namespace Microsoft.TypeSpec.Generator.Providers
         {
             Signature = signature;
             BodyExpression = bodyExpression;
-            XmlDocs = xmlDocProvider ?? MethodProviderHelpers.BuildXmlDocs(signature);
+            XmlDocs = xmlDocProvider ?? MethodProviderHelpers.BuildXmlDocs(signature, enclosingType);
             EnclosingType = enclosingType;
             Suppressions = (suppressions as IReadOnlyList<SuppressionStatement>) ?? [];
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MethodProvider"/> class with only a method signature and no body,
+        /// for use with partial method declarations.
+        /// </summary>
+        /// <param name="signature">The method signature.</param>
+        /// <param name="enclosingType">The enclosing type.</param>
+        /// <param name="xmlDocProvider">The XML documentation provider.</param>
+        public MethodProvider(
+            MethodSignature signature,
+            TypeProvider enclosingType,
+            XmlDocProvider? xmlDocProvider = default)
+        {
+            Signature = signature;
+            XmlDocs = xmlDocProvider ?? MethodProviderHelpers.BuildXmlDocs(signature, enclosingType);
+            EnclosingType = enclosingType;
+            Suppressions = [];
         }
 
         public void Update(
@@ -84,7 +102,7 @@ namespace Microsoft.TypeSpec.Generator.Providers
             {
                 Signature = signature;
                 // rebuild the XML docs if the signature changes
-                XmlDocs = MethodProviderHelpers.BuildXmlDocs(Signature);
+                XmlDocs = MethodProviderHelpers.BuildXmlDocs(Signature, EnclosingType);
             }
             if (bodyStatements != null)
             {
@@ -129,9 +147,9 @@ namespace Microsoft.TypeSpec.Generator.Providers
                     BodyExpression = expression;
                 }
             }
-            else
+            else if (BodyStatements != null)
             {
-                var updatedStatements = BodyStatements!.Accept(visitor, this);
+                var updatedStatements = BodyStatements.Accept(visitor, this);
                 if (!ReferenceEquals(updatedStatements, BodyStatements))
                 {
                     BodyStatements = updatedStatements;

@@ -63,6 +63,17 @@ class ParameterSerializer:
         self.serialize_namespace = serialize_namespace
 
     def serialize_parameter(self, parameter: ParameterType, serializer_name: str) -> str:
+        # Check if parameter uses JSON encoding (from @encode("application/json"))
+        if hasattr(parameter, 'content_type') and parameter.content_type == 'application/json':
+            # JSON-encode the parameter value
+            import_statement = "import json"
+            origin_name = parameter.full_client_name
+            param_name = f'"{origin_name.lstrip("_")}"'
+            # Serialize as JSON string, then URL-encode it
+            json_value = f"json.dumps({origin_name})" if origin_name else '""'
+            serialize_line = f'{serializer_name}.query({param_name}, {json_value}, "str")'
+            return serialize_line
+        
         optional_parameters = []
 
         if parameter.skip_url_encoding:

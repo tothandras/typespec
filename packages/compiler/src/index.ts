@@ -12,10 +12,6 @@ export {
   isTypeSpecValueTypeOf,
   typespecTypeToJson,
   validateDecoratorNotOnType,
-  // TODO: decide what to do with those, dec should use extern dec instead
-  // if we remove, remove from decorator-utils too
-  // validateDecoratorParamCount,
-  // validateDecoratorTarget,
   validateDecoratorUniqueOnNode,
   type DecoratorDefinition,
   type DecoratorParamDefinition,
@@ -81,6 +77,8 @@ export {
   getMaxValueAsNumeric,
   getMaxValueExclusive,
   getMaxValueExclusiveAsNumeric,
+  getMaxValueExclusiveForScalar,
+  getMaxValueForScalar,
   getMinItems,
   getMinItemsAsNumeric,
   getMinLength,
@@ -89,6 +87,8 @@ export {
   getMinValueAsNumeric,
   getMinValueExclusive,
   getMinValueExclusiveAsNumeric,
+  getMinValueExclusiveForScalar,
+  getMinValueForScalar,
   type Discriminator,
 } from "./core/intrinsic-type-state.js";
 export {
@@ -191,6 +191,7 @@ export {
   serializeValueAsJson,
   Service,
   ServiceDetails,
+  setMediaTypeHint,
   VisibilityProvider,
   type BytesKnownEncoding,
   type DateTimeKnownEncoding,
@@ -200,6 +201,7 @@ export {
   type ExampleOptions,
   type OpExample,
 } from "./lib/decorators.js";
+export { UnserializableValueError, UnsupportedScalarConstructorError } from "./lib/examples.js";
 export { MANIFEST, type TypeSpecManifest } from "./manifest.js";
 export {
   resolveModule,
@@ -231,7 +233,7 @@ export {
 export type { PackageJson } from "./types/package-json.js";
 
 import { $decorators as intrinsicDecorators } from "./lib/intrinsic/tsp-index.js";
-import { $decorators as stdDecorators } from "./lib/tsp-index.js";
+import { $decorators as stdDecorators, $functions as stdFunctions } from "./lib/tsp-index.js";
 /** @internal for Typespec compiler */
 export const $decorators = {
   TypeSpec: {
@@ -242,8 +244,19 @@ export const $decorators = {
   },
 };
 
-export { applyCodeFix, applyCodeFixes } from "./core/code-fixes.js";
-export { createSuppressCodeFix } from "./core/compiler-code-fixes/suppress.codefix.js";
+/** @internal for Typespec compiler */
+export const $functions = {
+  TypeSpec: {
+    ...stdFunctions.TypeSpec,
+  },
+};
+
+export { applyCodeFix, applyCodeFixes, resolveCodeFix } from "./core/code-fixes.js";
+export { createAddDecoratorCodeFix } from "./core/compiler-code-fixes/create-add-decorator/create-add-decorator.codefix.js";
+export {
+  createSuppressCodeFix,
+  createSuppressCodeFixes,
+} from "./core/compiler-code-fixes/suppress.codefix.js";
 export {
   ensureTrailingDirectorySeparator,
   getAnyExtensionFromPath,
@@ -280,6 +293,7 @@ export {
   type NavigationOptions,
 } from "./core/semantic-walker.js";
 export { createSourceFile, getSourceFileKindFromExt } from "./core/source-file.js";
+/* eslint-disable @typescript-eslint/no-deprecated -- exporting deprecated overloads for backward compatibility */
 export {
   isArrayModelType,
   isDeclaredInNamespace,
@@ -297,6 +311,7 @@ export {
   isValue,
   isVoidType,
 } from "./core/type-utils.js";
+/* eslint-enable @typescript-eslint/no-deprecated */
 export { ListenerFlow, NoTarget } from "./core/types.js";
 export type {
   ArrayModelType,
@@ -321,6 +336,7 @@ export type {
   DecoratorContext,
   DecoratorFunction,
   DecoratorImplementations,
+  DecoratorValidatorCallbacks,
   DeprecatedDirective,
   Diagnostic,
   DiagnosticCreator,
@@ -348,8 +364,10 @@ export type {
   Expression,
   FileLibraryMetadata,
   FilePos,
+  FunctionContext,
   FunctionParameter,
   FunctionParameterBase,
+  FunctionValue,
   IdentifierContext,
   IdentifierKind,
   IndeterminateEntity,

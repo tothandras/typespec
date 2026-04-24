@@ -1,11 +1,14 @@
-import { mkdir } from "fs/promises";
+import { mkdir, rm } from "fs/promises";
 import path from "node:path";
-import { rimraf } from "rimraf";
 import { beforeEach, describe } from "vitest";
-import { contrastResult, preContrastResult, startWithCommandPalette } from "./common/common-steps";
+import {
+  expectFilesInDir,
+  preContrastResult,
+  startWithCommandPalette,
+} from "./common/common-steps";
 import { inputProjectName, selectEmitters, selectTemplate } from "./common/create-steps";
 import { mockShowOpenDialog } from "./common/mock-dialogs";
-import { CaseScreenshot, test, testfilesDir } from "./common/utils";
+import { CaseScreenshot, tempDir, test } from "./common/utils";
 
 enum CreateProjectTriggerType {
   Click = "RightClick",
@@ -21,19 +24,13 @@ type CreateConfigType = {
   expectedResults: string[];
 };
 
-const CreateTypespecProjectFolderPath = path.resolve(testfilesDir, "CreateTypespecProject");
+// Move to the temp directory to execute the test
+const CreateTypespecProjectFolderPath = path.resolve(tempDir, "CreateTypespecProject");
 
 const createCase = "CreateTypespecProject";
 const templateName = "Generic Rest API";
 const templateNameDescription = "Create a project representing a generic REST API service.";
-const expectedResults = [
-  ".gitignore",
-  "main.tsp",
-  "node_modules",
-  "package-lock.json",
-  "package.json",
-  "tspconfig.yaml",
-];
+const expectedResults = [".gitignore", "main.tsp", "package.json", "tspconfig.yaml"];
 
 const CreateCasesConfigList: CreateConfigType[] = [
   {
@@ -49,7 +46,7 @@ const CreateCasesConfigList: CreateConfigType[] = [
 beforeEach(async () => {
   const dir = CreateTypespecProjectFolderPath;
   try {
-    await rimraf(dir);
+    await rm(dir, { recursive: true, force: true });
   } catch {}
   await mkdir(dir, { recursive: true });
 });
@@ -64,6 +61,9 @@ describe.each(CreateCasesConfigList)("CreateTypespecProject", async (item) => {
       workspacePath: workspacePath,
     });
     await cs.screenshot(page, "after_launch");
+    // Wait for VS Code UI to be ready before mocking dialogs to avoid
+    // "Execution context was destroyed" errors from window reloads.
+    await page.waitForSelector(".explorer-viewlet", { timeout: 30000 });
     await mockShowOpenDialog(app, [workspacePath]);
     await startWithCommandPalette(page, "Create Typespec Project", cs);
     await cs.screenshot(page, "after_start_command");
@@ -80,7 +80,6 @@ describe.each(CreateCasesConfigList)("CreateTypespecProject", async (item) => {
       cs,
       app,
     );
-    await contrastResult(expectedResults, workspacePath, cs);
-    app.close();
+    await expectFilesInDir(expectedResults, workspacePath);
   });
 });

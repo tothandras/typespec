@@ -16,7 +16,7 @@ import {
   Type,
   TypeNameOptions,
 } from "@typespec/compiler";
-import { getOperationId } from "./decorators.js";
+import { getExtensions, getOperationId } from "./decorators.js";
 import { createDiagnostic, reportDiagnostic } from "./lib.js";
 import { ExtensionKey } from "./types.js";
 
@@ -35,6 +35,16 @@ export function shouldInline(program: Program, type: Type): boolean {
   if (getFriendlyName(program, type)) {
     return false;
   }
+
+  if (getExtensions(program, type).has("x-inline")) {
+    switch (getExtensions(program, type).get("x-inline")) {
+      case true:
+        return true;
+      case false:
+        return false;
+    }
+  }
+
   switch (type.kind) {
     case "Model":
       return !type.name || isTemplateInstance(type);

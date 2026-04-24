@@ -10,6 +10,7 @@ import {
 import { getSymNode } from "../core/binder.js";
 import { getDeprecationDetails } from "../core/deprecation.js";
 import { compilerAssert, getSourceLocation } from "../core/diagnostics.js";
+import { getLocationContext } from "../core/helpers/location-context.js";
 import { printIdentifier } from "../core/helpers/syntax-utils.js";
 import { getFirstAncestor, positionInRange } from "../core/parser.js";
 import {
@@ -27,6 +28,7 @@ import {
   NodeFlags,
   PositionDetail,
   StringLiteralNode,
+  Sym,
   SymbolFlags,
   SyntaxKind,
   Type,
@@ -238,6 +240,7 @@ const keywords = [
 
   // Modifiers
   ["extern", { root: true, namespace: true }],
+  ["internal", { root: true, namespace: true }],
 
   // Scalars
   ["init", { scalarBody: true }],
@@ -410,7 +413,11 @@ async function addIdentifierCompletion(
   if (result.size === 0) {
     return;
   }
+  const sourceLocation = getLocationContext(program, node);
   for (const [key, { sym, label, suffix }] of result) {
+    if (!canAccessCompletionSymbol(sym, sourceLocation)) {
+      continue;
+    }
     let kind: CompletionItemKind;
     let deprecated = false;
     const symNode = getSymNode(sym);
@@ -442,6 +449,17 @@ async function addIdentifierCompletion(
       kind,
     };
 
+    // skip indexer/docFromComment functions under TypeSpec namespace
+    // these are internal only functions(decorators) that should not be exposed to users
+    if (
+      (item.label === "indexer" || item.label === "docFromComment") &&
+      item.kind === CompletionItemKind.Function &&
+      sym.parent?.name === "TypeSpec" &&
+      item.documentation === undefined
+    ) {
+      continue;
+    }
+
     if (sym.name.startsWith("$")) {
       const targetNode = getSourceLocation(node);
       const lineAndChar = targetNode.file.getLineAndCharacterOfPosition(node.pos);
@@ -465,6 +483,27 @@ async function addIdentifierCompletion(
 
   if (node.parent?.kind === SyntaxKind.TypeReference) {
     addKeywordCompletion("identifier", completions);
+  }
+
+  function canAccessCompletionSymbol(
+    sym: Sym,
+    sourceLocation: ReturnType<typeof getLocationContext>,
+  ) {
+    const isInternalDeclaration =
+      (sym.flags & (SymbolFlags.Internal | SymbolFlags.Declaration)) ===
+      (SymbolFlags.Internal | SymbolFlags.Declaration);
+
+    if (!isInternalDeclaration) return true;
+    if (sourceLocation.type === "synthetic" || sourceLocation.type === "compiler") return true;
+
+    return sym.declarations.some((decl) => {
+      const declLocation = getLocationContext(program, decl);
+
+      if (declLocation.type !== sourceLocation.type) return false;
+      if (declLocation.type === "project") return true;
+
+      return declLocation === sourceLocation;
+    });
   }
 }
 

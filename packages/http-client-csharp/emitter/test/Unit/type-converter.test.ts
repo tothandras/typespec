@@ -69,7 +69,7 @@ describe("Enum value references", () => {
     );
     const context = createEmitterContext(program);
     const sdkContext = await createCSharpSdkContext(context);
-    const root = createModel(sdkContext);
+    const [root] = createModel(sdkContext);
     const enumType = root.enums.find((e) => e.name === "TestEnum");
     ok(enumType, "TestEnum should exist in the enums list");
     strictEqual(enumType.values.length, 3, "TestEnum should have 3 values");
@@ -85,5 +85,98 @@ describe("Enum value references", () => {
       strictEqual(enumValue.enumType.name, "TestEnum");
       strictEqual(enumValue.enumType.crossLanguageDefinitionId, enumType.crossLanguageDefinitionId);
     }
+  });
+});
+
+describe("External types", () => {
+  let runner: TestHost;
+
+  beforeEach(async () => {
+    runner = await createEmitterTestHost();
+  });
+
+  it("should convert external type from @alternateType decorator", async () => {
+    const program = await typeSpecCompile(
+      `
+      @alternateType({
+        identity: "Azure.Core.Expressions.DataFactoryExpression",
+        package: "Azure.Core.Expressions",
+        minVersion: "1.0.0",
+      }, "csharp")
+      union Dfe<T> {
+        T,
+        DfeExpression: string
+      }
+      
+      model TestModel {
+        prop: Dfe<string>;
+      }
+      
+      op test(@body input: TestModel): void;
+    `,
+      runner,
+      { IsTCGCNeeded: true },
+    );
+    const context = createEmitterContext(program);
+    const sdkContext = await createCSharpSdkContext(context);
+    const [root] = createModel(sdkContext);
+
+    const testModel = root.models.find((m) => m.name === "TestModel");
+    ok(testModel, "TestModel should exist");
+
+    const prop = testModel.properties.find((p) => p.name === "prop");
+    ok(prop, "prop should exist");
+
+    // The type should remain a union but with external info
+    strictEqual(prop.type.kind, "union");
+    ok((prop.type as any).external, "Type should have external info");
+    strictEqual(
+      (prop.type as any).external.identity,
+      "Azure.Core.Expressions.DataFactoryExpression",
+    );
+    strictEqual((prop.type as any).external.package, "Azure.Core.Expressions");
+    strictEqual((prop.type as any).external.minVersion, "1.0.0");
+    // Verify union variants are preserved
+    ok((prop.type as any).variantTypes, "Union should have variant types");
+    strictEqual((prop.type as any).variantTypes.length, 2, "Union should have 2 variant types");
+  });
+
+  it("should convert external type on model", async () => {
+    const program = await typeSpecCompile(
+      `
+      @alternateType({
+        identity: "System.Text.Json.JsonElement",
+        package: "System.Text.Json",
+        minVersion: "8.0.0",
+      }, "csharp")
+      model JsonData {
+        data: string;
+      }
+      
+      model TestModel {
+        jsonElement: JsonData;
+      }
+      
+      op test(@body input: TestModel): void;
+    `,
+      runner,
+      { IsTCGCNeeded: true },
+    );
+    const context = createEmitterContext(program);
+    const sdkContext = await createCSharpSdkContext(context);
+    const [root] = createModel(sdkContext);
+
+    const testModel = root.models.find((m) => m.name === "TestModel");
+    ok(testModel, "TestModel should exist");
+
+    const jsonElementProp = testModel.properties.find((p) => p.name === "jsonElement");
+    ok(jsonElementProp, "jsonElement property should exist");
+
+    // The type should remain a model but with external info
+    strictEqual(jsonElementProp.type.kind, "model");
+    ok((jsonElementProp.type as any).external, "Type should have external info");
+    strictEqual((jsonElementProp.type as any).external.identity, "System.Text.Json.JsonElement");
+    strictEqual((jsonElementProp.type as any).external.package, "System.Text.Json");
+    strictEqual((jsonElementProp.type as any).external.minVersion, "8.0.0");
   });
 });

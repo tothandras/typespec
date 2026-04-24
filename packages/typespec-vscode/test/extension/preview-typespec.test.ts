@@ -1,17 +1,20 @@
-import { execSync } from "child_process";
 import { rm } from "fs/promises";
 import fs from "node:fs";
 import path from "node:path";
-import { beforeEach, describe } from "vitest";
-import { startWithCommandPalette } from "./common/common-steps";
-import { CaseScreenshot, retry, test, testfilesDir } from "./common/utils";
+import { beforeAll, beforeEach, describe } from "vitest";
+import { packagesInstall, packPackages, startWithCommandPalette } from "./common/common-steps";
+import { CaseScreenshot, retry, tempDir, test, testfilesDir } from "./common/utils";
 
-try {
-  execSync("pnpm install @typespec/http", { stdio: "inherit" });
-  execSync("pnpm install @typespec/openapi3", { stdio: "inherit" });
-} catch (e) {
-  process.exit(1);
-}
+// Test files are copied into the temporary directory before tests run
+beforeAll(async () => {
+  const src = path.resolve(testfilesDir, "PreviewTypespecProject");
+  const dest = path.resolve(tempDir, "PreviewTypespecProject");
+  fs.cpSync(src, dest, { recursive: true });
+
+  const packages = await packPackages();
+  // Install those packages locally
+  await packagesInstall(packages, "Preview");
+}, 300000);
 
 export enum PreviewProjectTriggerType {
   Command = "CommandPalette",
@@ -23,7 +26,7 @@ type PreviewConfigType = {
   triggerType: PreviewProjectTriggerType;
 };
 
-const PreviewTypespecProjectFolderPath = path.resolve(testfilesDir, "PreviewTypespecProject");
+const PreviewTypespecProjectFolderPath = path.resolve(tempDir, "PreviewTypespecProject");
 
 const PreviewCaseName = `PreviewTypespecProject`;
 const PreviewCasesConfigList: PreviewConfigType[] = [];
@@ -40,9 +43,6 @@ beforeEach(() => {
     for (const file of fs.readdirSync(previewTypespec)) {
       if (file === "main.tsp") {
         hasMainTsp = true;
-      } else {
-        const filePath = path.resolve(previewTypespec, file);
-        fs.rmSync(filePath, { recursive: true, force: true });
       }
     }
     if (!hasMainTsp) {
@@ -58,7 +58,7 @@ describe.each(PreviewCasesConfigList)("PreviewAPIDocument", async (item) => {
   test(caseName, async ({ launch }) => {
     const cs = new CaseScreenshot(caseName);
     const workspacePath = PreviewTypespecProjectFolderPath;
-    const { page, app } = await launch({
+    const { page } = await launch({
       workspacePath,
     });
     await page.getByRole("treeitem", { name: "main.tsp" }).locator("a").click();
@@ -80,16 +80,5 @@ describe.each(PreviewCasesConfigList)("PreviewAPIDocument", async (item) => {
       cs,
     );
     await rm(cs.caseDir, { recursive: true });
-    app.close();
-    try {
-      execSync("git restore ./package.json", { stdio: "inherit" });
-    } catch (e) {
-      process.exit(1);
-    }
-    try {
-      execSync("git restore ../../pnpm-lock.yaml", { stdio: "inherit" });
-    } catch (e) {
-      process.exit(1);
-    }
   });
 });

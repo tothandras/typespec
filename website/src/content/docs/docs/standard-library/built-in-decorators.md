@@ -609,17 +609,17 @@ scalar Username extends string;
 
 Specify the maximum value this numeric type should be.
 ```typespec
-@maxValue(value: valueof numeric)
+@maxValue(value: valueof numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration)
 ```
 
 #### Target
 
-`numeric | ModelProperty`
+`numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration | ModelProperty`
 
 #### Parameters
 | Name | Type | Description |
 |------|------|-------------|
-| value | [valueof `numeric`](#numeric) | Maximum value |
+| value | `valueof numeric \| utcDateTime \| offsetDateTime \| plainDate \| plainTime \| duration` | Maximum value |
 
 #### Examples
 
@@ -634,17 +634,17 @@ scalar Age is int32;
 Specify the maximum value this numeric type should be, exclusive of the given
 value.
 ```typespec
-@maxValueExclusive(value: valueof numeric)
+@maxValueExclusive(value: valueof numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration)
 ```
 
 #### Target
 
-`numeric | ModelProperty`
+`numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration | ModelProperty`
 
 #### Parameters
 | Name | Type | Description |
 |------|------|-------------|
-| value | [valueof `numeric`](#numeric) | Maximum value |
+| value | `valueof numeric \| utcDateTime \| offsetDateTime \| plainDate \| plainTime \| duration` | Maximum value |
 
 #### Examples
 
@@ -746,17 +746,17 @@ scalar Username extends string;
 
 Specify the minimum value this numeric type should be.
 ```typespec
-@minValue(value: valueof numeric)
+@minValue(value: valueof numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration)
 ```
 
 #### Target
 
-`numeric | ModelProperty`
+`numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration | ModelProperty`
 
 #### Parameters
 | Name | Type | Description |
 |------|------|-------------|
-| value | [valueof `numeric`](#numeric) | Minimum value |
+| value | `valueof numeric \| utcDateTime \| offsetDateTime \| plainDate \| plainTime \| duration` | Minimum value |
 
 #### Examples
 
@@ -771,17 +771,17 @@ scalar Age is int32;
 Specify the minimum value this numeric type should be, exclusive of the given
 value.
 ```typespec
-@minValueExclusive(value: valueof numeric)
+@minValueExclusive(value: valueof numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration)
 ```
 
 #### Target
 
-`numeric | ModelProperty`
+`numeric | utcDateTime | offsetDateTime | plainDate | plainTime | duration | ModelProperty`
 
 #### Parameters
 | Name | Type | Description |
 |------|------|-------------|
-| value | [valueof `numeric`](#numeric) | Minimum value |
+| value | `valueof numeric \| utcDateTime \| offsetDateTime \| plainDate \| plainTime \| duration` | Minimum value |
 
 #### Examples
 
@@ -1318,6 +1318,9 @@ Visibility may be set explicitly using any of the following decorators:
 
 
 ### `@withLifecycleUpdate` {#@withLifecycleUpdate}
+:::caution
+**Deprecated**: withLifecycleUpdate is deprecated and will be removed in a future release. Use the `Update` template instead.
+:::
 
 Transforms the `target` model to include only properties that are visible during the
 "Update" lifecycle phase.
@@ -1504,6 +1507,9 @@ model DogRead {
 
 
 ### `@withVisibilityFilter` {#@withVisibilityFilter}
+:::caution
+**Deprecated**: withVisibilityFilter is deprecated and will be removed in a future release. Use the `FilterVisibility` template or Lifecycle specific templates (e.g. `Read`, `Create`, `Update`, etc.) instead.
+:::
 
 Applies the given visibility filter to the properties of the target model.
 

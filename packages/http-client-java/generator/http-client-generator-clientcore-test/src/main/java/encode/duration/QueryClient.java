@@ -43,7 +43,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -74,7 +74,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -105,7 +105,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -129,6 +129,38 @@ public final class QueryClient {
     }
 
     /**
+     * The int32SecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @param requestContext The context to configure the HTTP request before HTTP client sends it.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response}.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Response<Void> int32SecondsLargerUnitWithResponse(Duration input, RequestContext requestContext) {
+        return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.int32SecondsLargerUnit",
+            requestContext,
+            updatedContext -> this.serviceClient.int32SecondsLargerUnitWithResponse(input, updatedContext));
+    }
+
+    /**
+     * The int32SecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void int32SecondsLargerUnit(Duration input) {
+        int32SecondsLargerUnitWithResponse(input, RequestContext.none());
+    }
+
+    /**
      * The floatSeconds operation.
      * 
      * @param input The input parameter.
@@ -136,7 +168,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -160,6 +192,38 @@ public final class QueryClient {
     }
 
     /**
+     * The floatSecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @param requestContext The context to configure the HTTP request before HTTP client sends it.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response}.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Response<Void> floatSecondsLargerUnitWithResponse(Duration input, RequestContext requestContext) {
+        return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.floatSecondsLargerUnit",
+            requestContext,
+            updatedContext -> this.serviceClient.floatSecondsLargerUnitWithResponse(input, updatedContext));
+    }
+
+    /**
+     * The floatSecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void floatSecondsLargerUnit(Duration input) {
+        floatSecondsLargerUnitWithResponse(input, RequestContext.none());
+    }
+
+    /**
      * The float64Seconds operation.
      * 
      * @param input The input parameter.
@@ -167,7 +231,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -198,11 +262,11 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> int32MillisecondsWithResponse(int input, RequestContext requestContext) {
+    public Response<Void> int32MillisecondsWithResponse(Duration input, RequestContext requestContext) {
         return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.int32Milliseconds", requestContext,
             updatedContext -> this.serviceClient.int32MillisecondsWithResponse(input, updatedContext));
     }
@@ -217,8 +281,40 @@ public final class QueryClient {
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public void int32Milliseconds(int input) {
+    public void int32Milliseconds(Duration input) {
         int32MillisecondsWithResponse(input, RequestContext.none());
+    }
+
+    /**
+     * The int32MillisecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @param requestContext The context to configure the HTTP request before HTTP client sends it.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response}.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Response<Void> int32MillisecondsLargerUnitWithResponse(Duration input, RequestContext requestContext) {
+        return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.int32MillisecondsLargerUnit",
+            requestContext,
+            updatedContext -> this.serviceClient.int32MillisecondsLargerUnitWithResponse(input, updatedContext));
+    }
+
+    /**
+     * The int32MillisecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void int32MillisecondsLargerUnit(Duration input) {
+        int32MillisecondsLargerUnitWithResponse(input, RequestContext.none());
     }
 
     /**
@@ -229,11 +325,11 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> floatMillisecondsWithResponse(double input, RequestContext requestContext) {
+    public Response<Void> floatMillisecondsWithResponse(Duration input, RequestContext requestContext) {
         return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.floatMilliseconds", requestContext,
             updatedContext -> this.serviceClient.floatMillisecondsWithResponse(input, updatedContext));
     }
@@ -248,8 +344,40 @@ public final class QueryClient {
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public void floatMilliseconds(double input) {
+    public void floatMilliseconds(Duration input) {
         floatMillisecondsWithResponse(input, RequestContext.none());
+    }
+
+    /**
+     * The floatMillisecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @param requestContext The context to configure the HTTP request before HTTP client sends it.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response}.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Response<Void> floatMillisecondsLargerUnitWithResponse(Duration input, RequestContext requestContext) {
+        return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.floatMillisecondsLargerUnit",
+            requestContext,
+            updatedContext -> this.serviceClient.floatMillisecondsLargerUnitWithResponse(input, updatedContext));
+    }
+
+    /**
+     * The floatMillisecondsLargerUnit operation.
+     * 
+     * @param input The input parameter.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws HttpResponseException thrown if the service returns an error.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @Metadata(properties = { MetadataProperties.GENERATED })
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void floatMillisecondsLargerUnit(Duration input) {
+        floatMillisecondsLargerUnitWithResponse(input, RequestContext.none());
     }
 
     /**
@@ -260,11 +388,11 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> float64MillisecondsWithResponse(double input, RequestContext requestContext) {
+    public Response<Void> float64MillisecondsWithResponse(Duration input, RequestContext requestContext) {
         return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.float64Milliseconds", requestContext,
             updatedContext -> this.serviceClient.float64MillisecondsWithResponse(input, updatedContext));
     }
@@ -279,7 +407,7 @@ public final class QueryClient {
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public void float64Milliseconds(double input) {
+    public void float64Milliseconds(Duration input) {
         float64MillisecondsWithResponse(input, RequestContext.none());
     }
 
@@ -291,7 +419,7 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
@@ -322,11 +450,11 @@ public final class QueryClient {
      * @throws IllegalArgumentException thrown if parameters fail the validation.
      * @throws HttpResponseException thrown if the service returns an error.
      * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
-     * @return the response.
+     * @return the {@link Response}.
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> int32MillisecondsArrayWithResponse(List<Integer> input, RequestContext requestContext) {
+    public Response<Void> int32MillisecondsArrayWithResponse(List<Duration> input, RequestContext requestContext) {
         return this.instrumentation.instrumentWithResponse("Encode.Duration.Query.int32MillisecondsArray",
             requestContext,
             updatedContext -> this.serviceClient.int32MillisecondsArrayWithResponse(input, updatedContext));
@@ -342,7 +470,7 @@ public final class QueryClient {
      */
     @Metadata(properties = { MetadataProperties.GENERATED })
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public void int32MillisecondsArray(List<Integer> input) {
+    public void int32MillisecondsArray(List<Duration> input) {
         int32MillisecondsArrayWithResponse(input, RequestContext.none());
     }
 }

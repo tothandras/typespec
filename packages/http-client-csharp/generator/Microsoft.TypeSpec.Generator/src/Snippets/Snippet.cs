@@ -15,6 +15,7 @@ namespace Microsoft.TypeSpec.Generator.Snippets
     {
         public static ScopedApi<bool> Equal(this ParameterProvider parameter, ValueExpression other) => new BinaryOperatorExpression("==", parameter, other).As<bool>();
         public static ScopedApi<bool> Is(this ParameterProvider parameter, ValueExpression other) => new BinaryOperatorExpression("is", parameter, other).As<bool>();
+        public static ScopedApi<bool> IsNot(this ParameterProvider parameter, ValueExpression other) => new BinaryOperatorExpression("is not", parameter, other).As<bool>();
 
         public static ScopedApi As(this ParameterProvider parameter, CSharpType type) => ((ValueExpression)parameter).As(type);
         public static ScopedApi<T> As<T>(this ParameterProvider parameter) => ((ValueExpression)parameter).As<T>();
@@ -40,8 +41,8 @@ namespace Microsoft.TypeSpec.Generator.Snippets
 
         public static ValueExpression Static<T>() => TypeReferenceExpression.FromType(typeof(T));
         //overload needed since static types cannot be usd as type arguments
-        public static ValueExpression Static(Type type) => TypeReferenceExpression.FromType(type);
-        public static ValueExpression Static(CSharpType type) => TypeReferenceExpression.FromType(type);
+        public static ValueExpression Static(Type type) => TypeReferenceExpression.FromType(new CSharpType(type).WithNullable(false));
+        public static ValueExpression Static(CSharpType type) => TypeReferenceExpression.FromType(type.WithNullable(false));
         public static ValueExpression Static() => TypeReferenceExpression.FromType(null);
 
         public static ValueExpression Identifier(string name) => new MemberExpression(null, name);
